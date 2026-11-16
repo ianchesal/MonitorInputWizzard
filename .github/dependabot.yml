@@ -1,0 +1,24 @@
+# Weekly version updates. Each PR runs CI (.github/workflows/ci.yml) before it's merged.
+version: 2
+updates:
+  - package-ecosystem: nuget
+    directories:
+      - /
+      - /tests/MonitorInputWizzard.Tests
+    schedule:
+      interval: weekly
+    groups:
+      test-packages:
+        patterns: ["Microsoft.NET.Test.Sdk", "xunit*"]
+    commit-message:
+      prefix: deps
+
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
+    groups:
+      actions:
+        patterns: ["*"]
+    commit-message:
+      prefix: ci
