@@ -12,3 +12,7 @@
 **Upgrading:** choose **Exit** from the tray menu, replace the exe with the new one, and start it again. Your settings in `%AppData%\MonitorInputWizzard` are kept.
 
 **Verify the download** (optional): compare `Get-FileHash <zip>` with `SHA256SUMS.txt`.
+
+## License
+
+This is a fork of [Lunat1q/MonitorInputWizzard](https://github.com/Lunat1q/MonitorInputWizzard), which has no license yet, so the upstream code remains under its author's copyright and no license is granted for it here. A license has been requested upstream: https://github.com/Lunat1q/MonitorInputWizzard/issues/1. This repo will adopt the upstream license once one is added.

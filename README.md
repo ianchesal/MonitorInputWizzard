@@ -149,3 +149,7 @@ It reuses the saved settings, so configure once in the GUI, then wire the `.exe`
 - The NVAPI path **broadcasts** the write to every connected display on every NVIDIA GPU rather than targeting one. If that ever bites, per-display targeting by EDID match is the fix.
 - NVAPI transport is NVIDIA-only. AMD/Intel users on a monitor that needs the side-channel are out of luck for now.
 - The exe isn't code-signed, so SmartScreen warns on first run on a new PC.
+
+## License
+
+This is a fork of [Lunat1q/MonitorInputWizzard](https://github.com/Lunat1q/MonitorInputWizzard), which has no license yet, so the upstream code remains under its author's copyright and no license is granted for it here. A license has been requested upstream: https://github.com/Lunat1q/MonitorInputWizzard/issues/1. This repo will adopt the upstream license once one is added.
