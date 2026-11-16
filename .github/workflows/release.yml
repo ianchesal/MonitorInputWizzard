@@ -1,0 +1,63 @@
+# Builds the self-contained single-file exe and publishes it as a GitHub release.
+#
+#   Push a tag like v1.2.0 -> release "v1.2.0" with the zip and checksum attached.
+#   A tag with a suffix (v1.3.0-beta.1) is marked as a pre-release.
+#   Run manually (Actions tab -> Release -> Run workflow) -> build only; the zip is
+#   attached to the workflow run as an artifact, no release is created.
+name: Release
+
+on:
+  push:
+    tags: ['v*']
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 10.0.x
+
+      - name: Work out version
+        id: version
+        shell: pwsh
+        run: |
+          $v = if ($env:GITHUB_REF_TYPE -eq 'tag') { $env:GITHUB_REF_NAME.TrimStart('v') } else { "0.0.0-ci.$env:GITHUB_RUN_NUMBER" }
+          "version=$v" >> $env:GITHUB_OUTPUT
+
+      - name: Publish
+        run: dotnet publish MonitorInputWizzard.csproj -c Release -p:Version=${{ steps.version.outputs.version }} -o publish
+
+      - name: Package
+        shell: pwsh
+        run: |
+          $name = "MonitorInputWizzard-${{ steps.version.outputs.version }}-win-x64"
+          New-Item -ItemType Directory dist | Out-Null
+          Compress-Archive -Path publish/MonitorInputWizzard.exe, README.md -DestinationPath "dist/$name.zip"
+          $hash = (Get-FileHash "dist/$name.zip" -Algorithm SHA256).Hash.ToLower()
+          "$hash  $name.zip" | Out-File dist/SHA256SUMS.txt -Encoding ascii
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: MonitorInputWizzard-${{ steps.version.outputs.version }}-win-x64
+          path: dist/*
+
+      - name: Create GitHub release
+        if: github.ref_type == 'tag'
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          $flags = @()
+          if ('${{ steps.version.outputs.version }}'.Contains('-')) { $flags += '--prerelease' }
+          gh release create $env:GITHUB_REF_NAME (Get-ChildItem dist).FullName `
+            --repo $env:GITHUB_REPOSITORY `
+            --title "Monitor Input Wizzard $env:GITHUB_REF_NAME" `
+            --notes-file .github/release-notes.md `
+            --generate-notes @flags

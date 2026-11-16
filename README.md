@@ -9,10 +9,14 @@ It talks to the display over **DDC/CI**, the side-channel that rides along the v
 | **dxva2** (Windows `SetVCPFeature`) | Standard MCCS write to VCP register `0x60` on the monitor you pick | Your monitor follows the spec (most do, including Dell UltraSharps) |
 | **NVAPI raw I2C** | Writes the DDC/CI packet directly on the I2C bus of an NVIDIA GPU | Your monitor ignores standard writes (notably LG UltraGear — see below) |
 
+## Download
+
+Grab the latest `MonitorInputWizzard-<version>-win-x64.zip` from [Releases](https://github.com/ianchesal/MonitorInputWizzard/releases/latest). There's nothing to compile or install: extract it, move `MonitorInputWizzard.exe` somewhere permanent, run it, and follow [Setting it up](#setting-it-up).
+
 ## Requirements
 
 - Windows 10/11 (x64)
-- .NET 10 SDK to build (the published binary is self-contained — no runtime install needed)
+- .NET 10 SDK, only if you build it yourself (the released binary is self-contained — no runtime install needed)
 - **DDC/CI must be enabled in the monitor's OSD.** Many monitors ship with it off, and nothing will work until you turn it on.
 - NVIDIA GPU + driver, *only* if you use the NVAPI transport (`nvapi64.dll` comes with the driver)
 
@@ -33,6 +37,17 @@ dotnet publish -c Release
 ```
 
 The `.exe` lands in `bin/Release/net10.0-windows/win-x64/publish/`. It's self-contained (~72 MB), so to install it just copy it somewhere permanent, such as `%USERPROFILE%\Apps\`. Don't run it from `bin\`, which rebuilds and `dotnet clean` wipe. Then turn on **Start with Windows** from the tray menu. To upgrade, choose **Exit** from the tray menu, copy the new `.exe` over the old one, and start it again.
+
+### Cutting a release
+
+[`.github/workflows/release.yml`](.github/workflows/release.yml) builds the exe on GitHub and publishes it. Push a version tag:
+
+```
+git tag v1.0.0
+git push origin v1.0.0
+```
+
+A few minutes later, release `v1.0.0` appears with the zip and a `SHA256SUMS.txt` attached. The install notes come from [`.github/release-notes.md`](.github/release-notes.md), followed by an auto-generated changelog. The tag's version is stamped into the exe. A tag with a suffix, such as `v1.1.0-beta.1`, is marked as a pre-release. To test a build without releasing, run the workflow by hand from the Actions tab; the zip is attached to the run as an artifact.
 
 The first time you run an unsigned build on another PC, Windows SmartScreen may say "Windows protected your PC". Choose **More info → Run anyway**.
 

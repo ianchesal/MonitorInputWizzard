@@ -7,6 +7,8 @@ Windows-only WPF tray app (.NET 10) that switches monitor inputs over DDC/CI. Se
 - `dotnet build -c Release`: quick compile check. There are no tests; verify by running the app.
 - `dotnet publish -c Release`: self-contained single-file exe at `bin/Release/net10.0-windows/win-x64/publish/MonitorInputWizzard.exe` (~72 MB).
 - Keep builds warning-free (`Nullable` is on).
+- Name the project explicitly (`dotnet publish MonitorInputWizzard.csproj …`) when passing `-o`, because the folder also has `MonitorInputWizzard.slnx`.
+- Releases: `.github/workflows/release.yml` runs on `v*` tag pushes (windows-latest, .NET 10). It publishes with `-p:Version=<tag minus v>`, zips the exe and README, writes `SHA256SUMS.txt`, and runs `gh release create` with `.github/release-notes.md` plus generated notes. Tags with a `-suffix` are pre-releases. `workflow_dispatch` builds only and uploads an artifact. Creating a tag publishes a public release, so only tag when the user asks.
 
 ## Architecture
 
@@ -42,4 +44,4 @@ Windows-only WPF tray app (.NET 10) that switches monitor inputs over DDC/CI. Se
 
 - `origin` is the user's fork (`ianchesal/MonitorInputWizzard`); upstream is `Lunat1q/MonitorInputWizzard`. The user pushes straight to `main` on the fork. Never open PRs against upstream unless asked. Note that `gh pr create` in a fork defaults to the upstream repo.
 - `artifacts/` is gitignored. It holds a hand-assembled share package (`artifacts/MonitorInputWizzard/` with the exe, the user's `settings.json`, `Install.cmd`/`install.ps1`, `Uninstall.cmd`/`uninstall.ps1`, `README.txt`) zipped to `artifacts/MonitorInputWizzard.zip`. After a code change, refresh it by publishing, copying the exe in and re-zipping. The installer sets the same Run key as `Autostart.cs` and removes any legacy Startup-folder shortcut.
-- The repo has no LICENSE, so don't publish the binary or zip publicly.
+- Neither this fork nor upstream has a LICENSE. Check with the user before anything that redistributes the binary (releases, public uploads).
