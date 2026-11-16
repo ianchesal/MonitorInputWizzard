@@ -74,12 +74,7 @@ public partial class MainWindow : Window
         if (!SwitchTo(input) && !IsVisible) _tray.ShowMessage(Status.Text, warning: true);
     }
 
-    private static byte ParseHexByte(string s, byte fallback)
-    {
-        s = s.Trim();
-        if (s.StartsWith("0x", StringComparison.OrdinalIgnoreCase)) s = s[2..];
-        return byte.TryParse(s, System.Globalization.NumberStyles.HexNumber, null, out var b) ? b : fallback;
-    }
+    private static byte ParseHexByte(string s, byte fallback) => Hex.ParseByte(s, fallback);
 
     private void RefreshMonitors()
     {

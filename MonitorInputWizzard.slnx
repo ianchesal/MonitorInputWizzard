@@ -1,3 +1,6 @@
 <Solution>
   <Project Path="MonitorInputWizzard.csproj" />
+  <Folder Name="/tests/">
+    <Project Path="tests/MonitorInputWizzard.Tests/MonitorInputWizzard.Tests.csproj" />
+  </Folder>
 </Solution>

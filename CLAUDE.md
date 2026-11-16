@@ -4,7 +4,10 @@ Windows-only WPF tray app (.NET 10) that switches monitor inputs over DDC/CI. Se
 
 ## Build, run, publish
 
-- `dotnet build -c Release`: quick compile check. There are no tests; verify by running the app.
+- `dotnet test MonitorInputWizzard.slnx -c Release`: builds the app and runs the xUnit tests in `tests/MonitorInputWizzard.Tests` (Windows only). They cover only hardware-free logic (arg parsing, hex, settings JSON, the DDC/CI packet), so UI and monitor behaviour still needs a manual run of the app.
+- `.github/workflows/ci.yml` runs the build and tests on every PR and push to `main`.
+- The tests reach `internal` members via `InternalsVisibleTo`. To test something new, pull it out of the WPF/P/Invoke code into a plain static helper (see `Hex.cs`, `CommandLine.cs`, `NvApi.BuildSetVcpPayload`).
+- The app csproj excludes `tests/**` from its default globs; keep it that way or the tests get compiled into the exe.
 - `dotnet publish -c Release`: self-contained single-file exe at `bin/Release/net10.0-windows/win-x64/publish/MonitorInputWizzard.exe` (~72 MB).
 - Keep builds warning-free (`Nullable` is on).
 - Name the project explicitly (`dotnet publish MonitorInputWizzard.csproj …`) when passing `-o`, because the folder also has `MonitorInputWizzard.slnx`.
@@ -12,7 +15,7 @@ Windows-only WPF tray app (.NET 10) that switches monitor inputs over DDC/CI. Se
 
 ## Architecture
 
-- `App.xaml.cs`: arg parsing, then one of three modes:
+- `App.xaml.cs`: arg parsing (via `CommandLine.cs`), then one of three modes:
   - **Headless**: any argument other than `--tray` is an input name. It switches and exits without creating the window, mutex or tray.
   - **Second instance**: if the named mutex `Local\MonitorInputWizzard` is taken, it signals `Local\MonitorInputWizzard.Show` (unless `--tray`) and exits.
   - **Tray app**: `ShutdownMode.OnExplicitShutdown`. The window is shown unless `--tray`.
@@ -26,7 +29,7 @@ Windows-only WPF tray app (.NET 10) that switches monitor inputs over DDC/CI. Se
 ## Gotchas
 
 - **WinForms + WPF**: `UseWindowsForms` is on only for the tray. The csproj removes the `System.Windows.Forms` and `System.Drawing` implicit usings because they clash with WPF types (`Application`, `MessageBox`, `KeyEventArgs`…). In WinForms files, import explicitly and alias `System.Drawing` (see `TrayIcon.cs`); fully qualify `System.Windows.Application`.
-- **New CLI flags** must be stripped in `App.OnStartup` before `ParseTarget`, or they're treated as an input name and the app silently exits.
+- **New CLI flags** must be stripped in `App.OnStartup` (like `CommandLine.StripTrayFlag`) before `CommandLine.ParseTarget`, or they're treated as an input name and the app silently exits.
 - **Crash logging**: dispatcher and AppDomain unhandled exceptions are appended to `%TEMP%\miw-crash.txt`. A `ThreadPool` callback that throws kills the process, so keep background callbacks trivial (marshal to the dispatcher).
 - **The NVAPI default is on** (tuned for LG UltraGear) and broadcasts to every display. Don't press Switch while testing on a non-LG setup with it ticked.
 - `.cmd`/`.ps1` files meant for Windows PowerShell 5.1 should be ASCII with CRLF line endings.

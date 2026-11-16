@@ -5,8 +5,6 @@ namespace MonitorInputWizzard
 {
     public partial class App : Application
     {
-        private const string TrayFlag = "--tray";
-
         // Held for the life of the process so a second launch can find us and ask us to show the window.
         private Mutex? _instance;
         private EventWaitHandle? _showRequest;
@@ -15,11 +13,10 @@ namespace MonitorInputWizzard
         {
             base.OnStartup(e);
 
-            bool startInTray = e.Args.Contains(TrayFlag, StringComparer.OrdinalIgnoreCase);
-            var args = e.Args.Where(a => !a.Equals(TrayFlag, StringComparison.OrdinalIgnoreCase)).ToArray();
+            var args = CommandLine.StripTrayFlag(e.Args, out bool startInTray);
 
             // Headless mode: `MonitorInputWizzard.exe <input name>` switches and exits, no window.
-            string? target = ParseTarget(args);
+            string? target = CommandLine.ParseTarget(args);
             if (target is not null)
             {
                 HeadlessSwitch(target);
@@ -57,15 +54,6 @@ namespace MonitorInputWizzard
             if (!startInTray) window.ShowFromTray();
         }
 
-        // Accepts "HDMI1", "HDMI 1", or "--switch HDMI1". Returns null if no switch requested.
-        private static string? ParseTarget(string[] args)
-        {
-            if (args.Length == 0) return null;
-            var parts = args[0] is "--switch" or "-s" ? args.Skip(1) : args;
-            var name = string.Join(" ", parts).Trim();
-            return name.Length == 0 ? null : name;
-        }
-
         private static void LogCrash(object exception)
         {
             try
@@ -76,12 +64,10 @@ namespace MonitorInputWizzard
             catch { /* nothing more we can do */ }
         }
 
-        private static string Norm(string s) => s.Replace(" ", "").ToLowerInvariant();
-
         private static void HeadlessSwitch(string name)
         {
             var s = Settings.Load();
-            var preset = s.Inputs.FirstOrDefault(i => Norm(i.Name) == Norm(name));
+            var preset = CommandLine.FindPreset(s.Inputs, name);
             if (preset is null) return;
 
             if (s.UseNvApi)
