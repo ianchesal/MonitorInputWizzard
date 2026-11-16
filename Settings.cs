@@ -25,7 +25,7 @@ public sealed class InputPreset : INotifyPropertyChanged
     public string CodeHex
     {
         get => "0x" + _code.ToString("X2");
-        set { if (TryParseHex(value, out uint c)) Code = c; }
+        set { if (Hex.TryParse(value, out uint c)) Code = c; }
     }
 
     [JsonIgnore] public bool HasHotkey => _key != Key.None;
@@ -34,13 +34,6 @@ public sealed class InputPreset : INotifyPropertyChanged
     public string HotkeyText => HasHotkey
         ? (_modifiers == ModifierKeys.None ? "" : _modifiers.ToString().Replace(", ", "+") + "+") + _key
         : "(none)";
-
-    private static bool TryParseHex(string s, out uint value)
-    {
-        s = s.Trim();
-        if (s.StartsWith("0x", StringComparison.OrdinalIgnoreCase)) s = s[2..];
-        return uint.TryParse(s, System.Globalization.NumberStyles.HexNumber, null, out value);
-    }
 
     public event PropertyChangedEventHandler? PropertyChanged;
     private void OnChanged(string name) => PropertyChanged?.Invoke(this, new(name));
@@ -63,31 +56,35 @@ public sealed class Settings
     public byte SourceAddr { get; set; } = 0x50;
     public List<InputPreset> Inputs { get; set; } = new();
 
-    private static readonly string Path = System.IO.Path.Combine(
+    private static readonly string DefaultPath = Path.Combine(
         Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData),
         "MonitorInputWizzard", "settings.json");
 
-    public static Settings Load()
+    public static Settings Load() => Load(DefaultPath);
+
+    internal static Settings Load(string path)
     {
         try
         {
-            if (File.Exists(Path))
-                return JsonSerializer.Deserialize<Settings>(File.ReadAllText(Path)) ?? Defaults();
+            if (File.Exists(path))
+                return JsonSerializer.Deserialize<Settings>(File.ReadAllText(path)) ?? Defaults();
         }
         catch { /* corrupt/unreadable — fall back to defaults */ }
         return Defaults();
     }
 
-    public void Save()
+    public void Save() => Save(DefaultPath);
+
+    internal void Save(string path)
     {
-        Directory.CreateDirectory(System.IO.Path.GetDirectoryName(Path)!);
-        File.WriteAllText(Path, JsonSerializer.Serialize(this, new JsonSerializerOptions { WriteIndented = true }));
+        Directory.CreateDirectory(Path.GetDirectoryName(path)!);
+        File.WriteAllText(path, JsonSerializer.Serialize(this, new JsonSerializerOptions { WriteIndented = true }));
     }
 
     // Defaults tuned for LG UltraGear (confirmed on 27GN800): input select lives on VCP 0xF4 over the
     // NVAPI 0x50 sidechannel, not standard 0x60. For a standard monitor: uncheck NVIDIA I2C, set Input
     // VCP 0x60, and use codes 0x0F/0x11/0x12.
-    private static Settings Defaults() => new()
+    internal static Settings Defaults() => new()
     {
         InputRegister = 0xF4,
         UseNvApi = true,

@@ -8,7 +8,9 @@ public static class Autostart
     private const string RunKey = @"Software\Microsoft\Windows\CurrentVersion\Run";
     private const string ValueName = "MonitorInputWizzard";
 
-    private static string Command => $"\"{Environment.ProcessPath}\" --tray";
+    private static string Command => CommandFor(Environment.ProcessPath);
+
+    internal static string CommandFor(string? exePath) => $"\"{exePath}\" {CommandLine.TrayFlag}";
 
     public static bool IsEnabled
     {

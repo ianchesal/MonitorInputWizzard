@@ -67,11 +67,8 @@ public sealed class NvApi : IDisposable
         var gpus = new IntPtr[64];
         if (_enum(gpus, out int gpuCount) != 0 || gpuCount == 0) return "NVAPI: no GPUs.";
 
-        byte hi = (byte)(value >> 8), lo = (byte)value, len = 0x84, cmd = 0x03;
-        // DDC/CI host->display checksum seeds with the display write address (0x6E).
-        byte chk = (byte)(0x6E ^ sourceAddr ^ len ^ cmd ^ vcp ^ hi ^ lo);
         byte[] reg = { sourceAddr };
-        byte[] data = { len, cmd, vcp, hi, lo, chk };
+        byte[] data = BuildSetVcpPayload(vcp, value, sourceAddr);
         var log = new StringBuilder();
 
         for (int g = 0; g < gpuCount; g++)
@@ -108,6 +105,17 @@ public sealed class NvApi : IDisposable
             }
         }
         return log.Length == 0 ? "No connected displays." : log.ToString();
+    }
+
+    /// <summary>
+    /// The DDC/CI Set-VCP payload sent after the source-address byte: length, opcode, VCP, value hi/lo, checksum.
+    /// </summary>
+    internal static byte[] BuildSetVcpPayload(byte vcp, ushort value, byte sourceAddr)
+    {
+        byte hi = (byte)(value >> 8), lo = (byte)value, len = 0x84, cmd = 0x03;
+        // DDC/CI host->display checksum seeds with the display write address (0x6E).
+        byte chk = (byte)(0x6E ^ sourceAddr ^ len ^ cmd ^ vcp ^ hi ^ lo);
+        return new[] { len, cmd, vcp, hi, lo, chk };
     }
 
     public void Dispose() { if (_ready) { try { _unload(); } catch { } _ready = false; } }

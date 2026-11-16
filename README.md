@@ -135,6 +135,7 @@ It reuses the saved settings, so configure once in the GUI, then wire the `.exe`
 | File | What it does |
 |---|---|
 | [App.xaml.cs](App.xaml.cs) | Startup: headless command-line switch, `--tray`, single-instance handoff, crash logging |
+| [CommandLine.cs](CommandLine.cs) | Parses `--tray`, `--switch` and input names; matches presets ignoring case and spaces |
 | [MainWindow.xaml.cs](MainWindow.xaml.cs) | The UI: preset list, hotkey capture, Read/Test diagnostics, hide-to-tray |
 | [TrayIcon.cs](TrayIcon.cs) | Notification-area icon and its right-click menu |
 | [Autostart.cs](Autostart.cs) | "Start with Windows" via the per-user Run registry key |
@@ -142,7 +143,9 @@ It reuses the saved settings, so configure once in the GUI, then wire the `.exe`
 | [NvApi.cs](NvApi.cs) | Hand-rolled DDC/CI packets over NVAPI raw I2C, for monitors dxva2 can't reach |
 | [HotkeyManager.cs](HotkeyManager.cs) | System-wide hotkeys via `RegisterHotKey` + a WndProc hook |
 | [Settings.cs](Settings.cs) | Presets and transport config, persisted as JSON in `%AppData%` |
+| [Hex.cs](Hex.cs) | Parses the `0x11`-style hex values used in the UI and settings |
 | [app.ico](app.ico) | App and tray icon |
+| [tests/](tests/MonitorInputWizzard.Tests) | xUnit tests for the hardware-free logic; CI runs them on every PR and push to `main` |
 
 ## Known limits
 

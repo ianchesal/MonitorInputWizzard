@@ -10,6 +10,8 @@
     <UseWindowsForms>true</UseWindowsForms>
     <RootNamespace>MonitorInputWizzard</RootNamespace>
     <ApplicationIcon>app.ico</ApplicationIcon>
+    <!-- The test project lives under tests/; keep its sources out of the app's default globs. -->
+    <DefaultItemExcludes>$(DefaultItemExcludes);tests/**</DefaultItemExcludes>
   </PropertyGroup>
 
   <PropertyGroup>
@@ -24,6 +26,7 @@
     <Using Remove="System.Windows.Forms" />
     <Using Remove="System.Drawing" />
     <Resource Include="app.ico" />
+    <InternalsVisibleTo Include="MonitorInputWizzard.Tests" />
   </ItemGroup>
 
 </Project>
