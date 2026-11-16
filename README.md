@@ -1,6 +1,6 @@
 # MonitorInputWizzard
 
-A small Windows tray-less WPF utility that switches your monitor's **input source** (HDMI 1, DisplayPort 2, USB-C, …) with a global hotkey — or from the command line — instead of digging through the monitor's on-screen menu with the joystick nub on the back.
+A small Windows system-tray utility that switches your monitor's **input source** (HDMI 1, DisplayPort 2, USB-C, …) with a global hotkey — or from the command line — instead of digging through the monitor's on-screen menu with the joystick nub on the back.
 
 It talks to the display over **DDC/CI**, the side-channel that rides along the video cable. Two transports are supported:
 
@@ -50,6 +50,16 @@ The window is a list of **input presets**. Each preset is a name, a VCP code, an
 4. **Bind a hotkey.** Click a preset's hotkey button, press the combo. `Esc` clears it. Hotkeys are system-wide (registered via `RegisterHotKey`, with auto-repeat suppressed) and fire even when the window isn't focused.
 5. **Save.** Settings persist to `%AppData%\MonitorInputWizzard\settings.json`.
 
+### The tray icon
+
+The app lives in the notification area (the icons by the clock). Windows 11 puts new icons in the **^** overflow at first. Drag it onto the taskbar, or turn it on under *Settings → Personalization → Taskbar → Other system tray icons*.
+
+- **Left-click** opens the window.
+- **Right-click** gives a menu with a **Switch to …** entry for each preset (the last one used is ticked), **Start with Windows**, and **Exit**.
+- **Closing the window** hides it to the tray; hotkeys keep working. Only **Exit** in the tray menu quits.
+- **Start with Windows** adds a per-user `HKCU\…\Run` entry that launches the app with `--tray`, so it starts hidden.
+- Only one copy runs at a time. Launching it again just brings up the existing window.
+
 **Test** dims the selected monitor's brightness for ~1 second and restores it. If the screen visibly dims, DDC/CI writes are reaching the panel — so any input-switch failure is a wrong register or a wrong code, not a broken connection. (dxva2 mode only.)
 
 ### Default presets
@@ -78,6 +88,8 @@ MonitorInputWizzard.exe --switch "USB-C"
 
 It reuses the saved settings, so configure once in the GUI, then wire the `.exe` into a Stream Deck button, an AutoHotkey script, or a shortcut.
 
+`MonitorInputWizzard.exe --tray` starts the app hidden in the tray, without opening the window.
+
 ## Troubleshooting
 
 **Nothing happens.** Check DDC/CI is on in the monitor's OSD. Then hit **Test** — if brightness doesn't move, DDC/CI isn't getting through at all (bad/adapter cable, DDC/CI off, or a KVM/dock in the path eating the channel).
@@ -96,8 +108,11 @@ It reuses the saved settings, so configure once in the GUI, then wire the `.exe`
 | [NvApi.cs](NvApi.cs) | Hand-rolled DDC/CI packets over NVAPI raw I2C, for monitors dxva2 can't reach |
 | [HotkeyManager.cs](HotkeyManager.cs) | System-wide hotkeys via `RegisterHotKey` + a WndProc hook |
 | [Settings.cs](Settings.cs) | Presets and transport config, persisted as JSON in `%AppData%` |
-| [MainWindow.xaml.cs](MainWindow.xaml.cs) | The UI: preset list, hotkey capture, Read/Test diagnostics |
-| [App.xaml.cs](App.xaml.cs) | Startup; headless command-line switch path |
+| [MainWindow.xaml.cs](MainWindow.xaml.cs) | The UI: preset list, hotkey capture, Read/Test diagnostics, hide-to-tray |
+| [TrayIcon.cs](TrayIcon.cs) | Notification-area icon and its right-click menu |
+| [Autostart.cs](Autostart.cs) | "Start with Windows" via the per-user Run registry key |
+| [App.xaml.cs](App.xaml.cs) | Startup: headless command-line switch, `--tray`, single-instance handoff |
+| [app.ico](app.ico) | App and tray icon |
 
 ## Known limits
 
