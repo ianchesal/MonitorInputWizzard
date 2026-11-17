@@ -46,5 +46,6 @@ Windows-only WPF tray app (.NET 10) that switches monitor inputs over DDC/CI. Se
 ## Repo conventions
 
 - `origin` is the user's fork (`ianchesal/MonitorInputWizzard`); upstream is `Lunat1q/MonitorInputWizzard`. The user pushes straight to `main` on the fork. Never open PRs against upstream unless asked. Note that `gh pr create` in a fork defaults to the upstream repo.
+- `main` is protected: PRs need the CI `test` check (from GitHub Actions) to pass, and force-pushes and deletion are blocked. Admins are exempt, so direct pushes still work but skip that gate. Dependabot opens weekly grouped PRs for NuGet and Actions. `release.yml` isn't run by CI, so check action bumps with a build-only `gh workflow run release.yml --ref <branch>`.
 - `artifacts/` is gitignored. It holds a hand-assembled share package (`artifacts/MonitorInputWizzard/` with the exe, the user's `settings.json`, `Install.cmd`/`install.ps1`, `Uninstall.cmd`/`uninstall.ps1`, `README.txt`) zipped to `artifacts/MonitorInputWizzard.zip`. After a code change, refresh it by publishing, copying the exe in and re-zipping. The installer sets the same Run key as `Autostart.cs` and removes any legacy Startup-folder shortcut.
 - Neither this fork nor upstream has a LICENSE. Check with the user before anything that redistributes the binary (releases, public uploads).
